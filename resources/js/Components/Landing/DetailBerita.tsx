@@ -131,11 +131,14 @@ export function DetailBerita({ news }: DetailNewsProps) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="prose prose-lg prose-slate max-w-none text-muted leading-relaxed
+                        className="article-rich-content prose prose-lg prose-slate max-w-none text-muted leading-relaxed
                        prose-headings:font-serif prose-headings:text-ink prose-headings:font-bold
                        prose-a:text-primary hover:prose-a:text-primary-dark
                        prose-ul:list-disc prose-ul:pl-5
-                       prose-li:marker:text-primary"
+                       prose-li:marker:text-primary
+                       [&_figure]:my-8 [&_figure]:flex [&_figure]:flex-col [&_figure]:items-center [&_figure]:justify-center [&_figure]:mx-auto
+                       [&_img]:mx-auto [&_img]:block [&_img]:rounded-2xl [&_img]:shadow-md [&_img]:max-w-full sm:[&_img]:max-w-2xl [&_img]:h-auto
+                       [&_figcaption]:mt-2.5 [&_figcaption]:text-center [&_figcaption]:text-xs sm:[&_figcaption]:text-sm [&_figcaption]:italic [&_figcaption]:text-muted"
                         dangerouslySetInnerHTML={{ __html: safeContent }}
                     />
                 </article>

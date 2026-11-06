@@ -9,6 +9,7 @@ class Document extends Model
     protected $fillable = [
         'title',
         'category',
+        'order',
         'file_path',
         'size',
         'type',
@@ -16,6 +17,7 @@ class Document extends Model
     ];
 
     protected $casts = [
+        'order' => 'integer',
         'date' => 'date:Y-m-d',
     ];
 }

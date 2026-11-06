@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PublicController::class, 'index'])->name('home');
 Route::get('/berita/{slug}', [PublicController::class, 'berita'])->name('berita.detail');
 Route::get('/dokumen', [PublicController::class, 'dokumen'])->name('dokumen');
+Route::get('/dokumen/lihat/{dokumen}', [PublicController::class, 'lihatDokumen'])->name('dokumen.lihat');
 Route::get('/dokumen/unduh/{dokumen}', [PublicController::class, 'unduhDokumen'])->name('dokumen.unduh');
 Route::get('/struktur', [PublicController::class, 'struktur'])->name('struktur');
 
@@ -31,6 +32,7 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
 
     // Berita
     Route::get('/admin/berita', [BeritaController::class, 'index'])->name('admin.berita.index');
+    Route::post('/admin/berita/upload-image', [BeritaController::class, 'uploadImage'])->name('admin.berita.upload-image');
     Route::post('/admin/berita', [BeritaController::class, 'store'])->name('admin.berita.store');
     Route::post('/admin/berita/{berita}', [BeritaController::class, 'update'])->name('admin.berita.update');
     Route::delete('/admin/berita/{berita}', [BeritaController::class, 'destroy'])->name('admin.berita.destroy');
@@ -42,6 +44,7 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
     // Dokumen
     Route::get('/admin/dokumen', [DokumenController::class, 'index'])->name('admin.dokumen.index');
     Route::post('/admin/dokumen', [DokumenController::class, 'store'])->name('admin.dokumen.store');
+    Route::post('/admin/dokumen/{dokumen}/reorder', [DokumenController::class, 'reorder'])->name('admin.dokumen.reorder');
     Route::post('/admin/dokumen/{dokumen}', [DokumenController::class, 'update'])->name('admin.dokumen.update');
     Route::delete('/admin/dokumen/{dokumen}', [DokumenController::class, 'destroy'])->name('admin.dokumen.destroy');
 

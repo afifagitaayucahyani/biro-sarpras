@@ -9,19 +9,32 @@ export interface DocumentItem {
   id: number;
   title: string;
   category: string;
-  size: string;
-  date: string;
+  order?: number;
+  size?: string;
+  date?: string;
   fileUrl: string;
   type: "pdf" | "excel" | "word";
+  extension?: string;
 }
 
 export function Dokumen({ documents = [] }: { documents?: DocumentItem[] }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter dokumen berdasarkan pencarian
-  const filteredDocs = documents.filter((doc) =>
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase())
+ const filteredDocs = documents.filter(
+    (doc) =>
+      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+    const getExtensionLabel = (doc: DocumentItem): string => {
+    if (doc.extension) {
+      return doc.extension.toUpperCase();
+    }
+    if (doc.type === "excel") return "XLSX";
+    if (doc.type === "word") return "DOCX";
+    return "PDF";
+  };
 
   return (
     <>
@@ -78,48 +91,58 @@ export function Dokumen({ documents = [] }: { documents?: DocumentItem[] }) {
           <div className="bg-white border border-surface-container rounded-2xl shadow-sm overflow-hidden">
             {filteredDocs.length > 0 ? (
               <ul className="divide-y divide-surface-container">
-                {filteredDocs.map((doc) => (
-                  <motion.li
-                    key={doc.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-5 sm:p-6 hover:bg-surface-low transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary-soft flex items-center justify-center flex-shrink-0 text-primary">
-                        {doc.type === "excel" ? (
-                          <FileSpreadsheet className="w-6 h-6" />
-                        ) : (
-                          <FileText className="w-6 h-6" />
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="text-base font-bold text-ink mb-1 leading-snug">
-                          {doc.title}
-                        </h3>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted font-medium">
-                          <span className="px-2 py-0.5 bg-surface-container rounded-md text-ink">
-                            {doc.category}
-                          </span>
-                          <span>•</span>
-                          <span>{doc.size}</span>
-                          <span>•</span>
-                          <span>{doc.date}</span>
+                {filteredDocs.map((doc) => {
+                  const extLabel = getExtensionLabel(doc);
+                  return (
+                    <motion.li
+                      key={doc.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="p-5 sm:p-6 hover:bg-surface-low transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary-soft flex items-center justify-center flex-shrink-0 text-primary">
+                          {doc.type === "excel" ? (
+                            <FileSpreadsheet className="w-6 h-6" />
+                          ) : (
+                            <FileText className="w-6 h-6" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-ink mb-1.5 leading-snug">
+                            {doc.title}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+                            <span className="px-2.5 py-0.5 bg-surface-container rounded-md text-ink font-semibold">
+                              {doc.category}
+                            </span>
+                            <span
+                              className={`px-2.5 py-0.5 rounded-md font-bold uppercase tracking-wide border ${
+                                doc.type === "excel"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/70"
+                                  : doc.type === "word"
+                                    ? "bg-blue-50 text-blue-700 border-blue-200/70"
+                                    : "bg-red-50 text-red-700 border-red-200/70"
+                              }`}
+                            >
+                              {extLabel}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Link Unduh (Teks) */}
-                    <a
-                      href={sanitizeUrl(doc.fileUrl)}
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-dark hover:underline underline-offset-4 transition-all whitespace-nowrap self-start sm:self-center"
-                    >
-                      <Download className="w-4 h-4" />
-                      Unduh Berkas
-                    </a>
-                  </motion.li>
-                ))}
+                    {/* Tombol Lihat (Native PDF Viewer Bawaan Browser) */}
+                      <a
+                        href={sanitizeUrl(doc.fileUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-soft text-primary hover:bg-primary hover:text-white text-sm font-semibold transition-all whitespace-nowrap self-start sm:self-center"
+                      >
+                        <Download className="w-4 h-4" />
+                        Unduh Dokumen
+                      </a>
+                    </motion.li>
+                  );
+                })}
               </ul>
             ) : (
               <div className="p-12 text-center text-muted">

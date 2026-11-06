@@ -43,7 +43,7 @@ class PublicController extends Controller
                 'id' => $item->id,
                 'title' => $item->title,
                 'slug' => $item->slug,
-                'excerpt' => Str::limit(strip_tags($item->description), 160),
+                'excerpt' => Str::limit(trim((string) preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($item->description)))), 160),
                 'image' => $item->image ?: '/images/Hero.png',
                 'date' => Carbon::parse($item->date)->translatedFormat('d M Y'),
                 'author' => $item->author,
@@ -84,12 +84,15 @@ class PublicController extends Controller
             ->where('status', 'Aktif')
             ->first();
 
+        $rawDescription = (string) ($berita?->description ?? '');
+        $hasHtmlTags = $rawDescription !== strip_tags($rawDescription);
+
         return Inertia::render('DetailBerita', [
             'news' => $berita ? [
                 'id' => $berita->id,
                 'title' => $berita->title,
                 'slug' => $berita->slug,
-                'content' => nl2br(e($berita->description)),
+                'content' => $hasHtmlTags ? $rawDescription : nl2br(e($rawDescription)),
                 'image' => $berita->image ?: '/images/Hero.png',
                 'date' => Carbon::parse($berita->date)->translatedFormat('d M Y'),
                 'author' => $berita->author,
@@ -102,21 +105,48 @@ class PublicController extends Controller
      */
     public function dokumen(): Response
     {
-        $documents = Document::latest('date')
+        $documents = Document::orderBy('order', 'asc')
+            ->latest('date')
             ->latest('id')
             ->get()
-            ->map(fn ($doc) => [
-                'id' => $doc->id,
-                'title' => $doc->title,
-                'category' => $doc->category,
-                'size' => $doc->size ?: '-',
-                'date' => $doc->date ? Carbon::parse($doc->date)->translatedFormat('d M Y') : $doc->created_at->translatedFormat('d M Y'),
-                'fileUrl' => route('dokumen.unduh', $doc->id),
-                'type' => $doc->type ?: 'pdf',
-            ]);
+            ->map(function ($doc) {
+                $ext = strtoupper(pathinfo($doc->file_path, PATHINFO_EXTENSION));
+                if (!$ext) {
+                    $ext = match ($doc->type) {
+                        'excel' => 'XLSX',
+                        'word' => 'DOCX',
+                        default => 'PDF',
+                    };
+                }
+                return [
+                    'id' => $doc->id,
+                    'title' => $doc->title,
+                    'category' => $doc->category,
+                    'order' => $doc->order,
+                    'fileUrl' => route('dokumen.lihat', $doc->id),
+                    'type' => $doc->type ?: 'pdf',
+                    'extension' => $ext,
+                ];
+            });
 
         return Inertia::render('Dokumen', [
             'documents' => $documents,
+        ]);
+    }
+    /**
+     * Menampilkan berkas dokumen secara inline (Native Browser PDF Viewer).
+     */
+    public function lihatDokumen(Document $dokumen): BinaryFileResponse|RedirectResponse
+    {
+        $path = str_replace('/storage/', '', $dokumen->file_path);
+        $fullPath = Storage::disk('public')->path($path);
+        if (!file_exists($fullPath)) {
+            return redirect()->back()->with('error', 'Berkas dokumen fisik tidak ditemukan di server.');
+        }
+        $extension = pathinfo($dokumen->file_path, PATHINFO_EXTENSION) ?: 'pdf';
+        $namaBerkas = (Str::slug($dokumen->title) ?: 'dokumen') . '.' . $extension;
+        return response()->file($fullPath, [
+            'Content-Disposition' => 'inline; filename="' . $namaBerkas . '"',
         ]);
     }
 
